@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 100  # Increase from 50Hz to 100Hz for better odometry accuracy
+    update_rate: 200  
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
@@ -14,55 +14,50 @@ diffbot_base_controller:
     left_wheel_names: ["left_motor_joint"]
     right_wheel_names: ["right_motor_joint"]
 
-    # CORRECTED Physical parameters - critical for accurate odometry
-    wheel_separation: 0.355  # Distance between wheels (from URDF: 0.098*2)
+    # Thông số vật lý - quan trọng cho odometry chính xác
+    wheel_separation: 0.405  # Khoảng cách giữa 2 bánh xe
     wheels_per_side: 1
-    wheel_radius: 0.06    # Wheel radius calculated from diameter in hardware config
+    wheel_radius: 0.06    # Bán kính bánh xe 6cm - ĐÃ ĐÚNG
 
-    # CRITICAL CALIBRATION PARAMETERS - fine-tuned to fix ROTATION DRIFT
-    wheel_separation_multiplier: 1.02  # Increase to 5% to compensate for tire slip during rotation
-    left_wheel_radius_multiplier: 1.0   # Keep left wheel as reference
-    right_wheel_radius_multiplier: 1.0  # Slightly reduce right wheel to account for manufacturing differences
+    # Thông số hiệu chỉnh - tinh chỉnh để bù trừ độ trượt
+    wheel_separation_multiplier: 1.0  # Bắt đầu với 1.0, tăng nếu robot xoay chậm hơn lệnh
+    left_wheel_radius_multiplier: 1.0   
+    right_wheel_radius_multiplier: 1.0  
 
-    publish_rate: 100.0  # Increase significantly from 50.0 for much better odometry accuracy
+    publish_rate: 20.0  
     odom_frame_id: odom
     base_frame_id: base_link
     
-    # Improved covariance - more realistic uncertainty estimates
-    pose_covariance_diagonal : [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]  # Higher yaw uncertainty
-    twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]  # Higher angular velocity uncertainty
+    # Covariance - ước lượng độ không chắc chắn
+    pose_covariance_diagonal : [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
+    twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
 
-    open_loop: false  # Use encoder feedback for better accuracy
+    open_loop: false  
     enable_odom_tf: true
     cmd_vel_timeout: 0.03  
     publish_limited_velocity: true
     use_stamped_vel: false
-    velocity_rolling_window_size: 7  # Increase from 5 for smoother odometry during rotation
+    velocity_rolling_window_size: 7  
 
-    # Velocity limits - ensure they match your hardware capabilities
+    # Giới hạn vận tốc - ĐIỀU CHỈNH PHÙ HỢP VỚI 35 RPM
     linear.x.has_velocity_limits: true
     linear.x.has_acceleration_limits: true
     linear.x.has_jerk_limits: false
-    linear.x.max_velocity: 0.12   # m/s
-    linear.x.min_velocity: -0.12  # m/s
-    linear.x.max_acceleration: 0.4  # Increase slightly for better response
-    linear.x.min_acceleration: -0.4 
+    linear.x.max_velocity: 0.22   # Vmax = 35rpm * 2π/60 * 0.06m = 0.22 m/s
+    linear.x.min_velocity: -0.22  
+    linear.x.max_acceleration: 0.5  # Gia tốc vừa phải cho 35rpm
+    linear.x.min_acceleration: -0.5 
     linear.x.max_jerk: 0.0         
     linear.x.min_jerk: 0.0         
 
     angular.z.has_velocity_limits: true
     angular.z.has_acceleration_limits: true
     angular.z.has_jerk_limits: false
-    angular.z.max_velocity: 0.4    # GIẢM tốc độ xoay từ 0.6 -> 0.4 rad/s
-    angular.z.min_velocity: -0.4   # GIẢM tốc độ xoay từ -0.6 -> -0.4 rad/s
-    angular.z.max_acceleration: 2.0  # GIẢM gia tốc góc từ 3.0 -> 2.0 rad/s²
-    angular.z.min_acceleration: -2.0 # GIẢM gia tốc góc từ -3.0 -> -2.0 rad/s²
+    angular.z.max_velocity: 1.2    # Vận tốc góc tối đa ~1.2 rad/s với wheel_sep=0.355m
+    angular.z.min_velocity: -1.2   
+    angular.z.max_acceleration: 2.5  # Gia tốc góc phù hợp
+    angular.z.min_acceleration: -2.5 
     angular.z.max_jerk: 0.0         
     angular.z.min_jerk: 0.0         
 
-    # Improved PID gains for better wheel control during rotation
-    linear.x.pid: {p: 15.0, i: 4.0, d: 0.15}  # Increase gains for tighter control
-    angular.z.pid: {p: 15.0, i: 4.0, d: 0.15}  # Increase gains for tighter control
-
-    
-
+   
