@@ -14,21 +14,26 @@
         <!-- Real robot hardware -->
         <hardware>
           <plugin>naiscorp_hardware_interface/NaiscorpRobotHardware</plugin>
-          <param name="left_wheel_name">${prefix}wheel_left_joint</param>
-          <param name="right_wheel_name">${prefix}wheel_right_joint</param>
-          <param name="loop_rate">50.0</param>
-          <param name="device">/dev/ttyUSB1</param>
-          <param name="baud_rate">115200</param>
-          <param name="timeout_ms">50</param>
-          <param name="wheel_diameter">65</param>
-          <param name="pid_p">15.0</param>
-          <param name="pid_i">5.0</param>
-          <param name="pid_d">0.2</param>
+          <param name="left_wheel_name">${prefix}left_motor_joint</param>
+          <param name="right_wheel_name">${prefix}right_motor_joint</param>
+          <param name="device">/dev/ttyUSB0</param>
+          <param name="baud_rate">921600</param>
+          <param name="timeout_ms">3</param>
+          <param name="wheel_diameter">120</param>
+          <param name="pulses_per_round">7228</param>
+          <param name="motor_count">2</param>
+          <!-- motor_types: 0b00000011: position is 0, velocity is 1 -->
+          <param name="motor_types">3</param>
+          <param name="pid_flag">1</param>
+          <param name="logging_flag">0</param>
+          <param name="pid_p">0.0</param>
+          <param name="pid_i">500.0</param>
+          <param name="pid_d">0.0</param>
         </hardware>
       </xacro:unless>
       
       <!-- Left wheel joint -->
-      <joint name="${prefix}wheel_left_joint">
+      <joint name="${prefix}left_motor_joint">
         <command_interface name="velocity">
           <param name="min">-0.4</param>
           <param name="max">0.4</param>
@@ -38,7 +43,7 @@
       </joint>
       
       <!-- Right wheel joint -->
-      <joint name="${prefix}wheel_right_joint">
+      <joint name="${prefix}right_motor_joint">
         <command_interface name="velocity">
           <param name="min">-0.4</param>
           <param name="max">0.4</param>
