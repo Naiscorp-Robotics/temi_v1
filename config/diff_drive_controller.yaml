@@ -1,0 +1,68 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Increase from 50Hz to 100Hz for better odometry accuracy
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    diffbot_base_controller:
+      type: diff_drive_controller/DiffDriveController
+
+
+diffbot_base_controller:
+  ros__parameters:
+    left_wheel_names: ["left_motor_joint"]
+    right_wheel_names: ["right_motor_joint"]
+
+    # CORRECTED Physical parameters - critical for accurate odometry
+    wheel_separation: 0.355  # Distance between wheels (from URDF: 0.098*2)
+    wheels_per_side: 1
+    wheel_radius: 0.06    # Wheel radius calculated from diameter in hardware config
+
+    # CRITICAL CALIBRATION PARAMETERS - fine-tuned to fix ROTATION DRIFT
+    wheel_separation_multiplier: 1.02  # Increase to 5% to compensate for tire slip during rotation
+    left_wheel_radius_multiplier: 1.0   # Keep left wheel as reference
+    right_wheel_radius_multiplier: 1.0  # Slightly reduce right wheel to account for manufacturing differences
+
+    publish_rate: 100.0  # Increase significantly from 50.0 for much better odometry accuracy
+    odom_frame_id: odom
+    base_frame_id: base_link
+    
+    # Improved covariance - more realistic uncertainty estimates
+    pose_covariance_diagonal : [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]  # Higher yaw uncertainty
+    twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]  # Higher angular velocity uncertainty
+
+    open_loop: false  # Use encoder feedback for better accuracy
+    enable_odom_tf: true
+    cmd_vel_timeout: 0.03  
+    publish_limited_velocity: true
+    use_stamped_vel: false
+    velocity_rolling_window_size: 7  # Increase from 5 for smoother odometry during rotation
+
+    # Velocity limits - ensure they match your hardware capabilities
+    linear.x.has_velocity_limits: true
+    linear.x.has_acceleration_limits: true
+    linear.x.has_jerk_limits: false
+    linear.x.max_velocity: 0.12   # m/s
+    linear.x.min_velocity: -0.12  # m/s
+    linear.x.max_acceleration: 0.4  # Increase slightly for better response
+    linear.x.min_acceleration: -0.4 
+    linear.x.max_jerk: 0.0         
+    linear.x.min_jerk: 0.0         
+
+    angular.z.has_velocity_limits: true
+    angular.z.has_acceleration_limits: true
+    angular.z.has_jerk_limits: false
+    angular.z.max_velocity: 0.4    # GIẢM tốc độ xoay từ 0.6 -> 0.4 rad/s
+    angular.z.min_velocity: -0.4   # GIẢM tốc độ xoay từ -0.6 -> -0.4 rad/s
+    angular.z.max_acceleration: 2.0  # GIẢM gia tốc góc từ 3.0 -> 2.0 rad/s²
+    angular.z.min_acceleration: -2.0 # GIẢM gia tốc góc từ -3.0 -> -2.0 rad/s²
+    angular.z.max_jerk: 0.0         
+    angular.z.min_jerk: 0.0         
+
+    # Improved PID gains for better wheel control during rotation
+    linear.x.pid: {p: 15.0, i: 4.0, d: 0.15}  # Increase gains for tighter control
+    angular.z.pid: {p: 15.0, i: 4.0, d: 0.15}  # Increase gains for tighter control
+
+    
+

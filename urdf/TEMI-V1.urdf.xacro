@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<robot name="TEMI-V1" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="use_sim" default="true"/>
+  
+<!-- 
+  TEMI-V1 Robot URDF Description
+  
+  This URDF was automatically created by SolidWorks to URDF Exporter! 
+  Originally created by Stephen Brawner (brawner@gmail.com)
+  Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+  For more information, please see http://wiki.ros.org/sw_urdf_exporter
+  
+  Robot Structure:
+  - Base platform with main chassis
+  - Two drive wheels (left and right motors)
+  - Two caster wheels (front left and right) for stability
+  - LiDAR sensor mounted on top
+  
+  Coordinate System:
+  - X: Forward direction
+  - Y: Left direction  
+  - Z: Up direction
+-->
+
+  <!-- ========================================== -->
+  <!-- BASE LINK - Main chassis/platform         -->
+  <!-- ========================================== -->
+  <link name="base_link"/>
+  <link name="chassis_link">
+    <inertial>
+      <origin
+        xyz="0.085218 -5.0152E-07 0.084849"
+        rpy="0 0 0" />
+      <mass
+        value="22.5756" />
+      <inertia
+        ixx="0.147525"
+        ixy="-2.5113E-06"
+        ixz="-0.018764"
+        iyy="0.154675"
+        iyz="7.5505E-08"
+        izz="0.068648" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.86667 0.9098 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name = "chassis_joint" type = "fixed">
+    <origin xyz = "0 0 0" rpy = "0 0 0"/>
+    <parent link = "base_link"/>
+    <child link = "chassis_link"/>
+  </joint>
+
+  <!-- ========================================== -->
+  <!-- DRIVE WHEELS - Left and Right Motors      -->
+  <!-- ========================================== -->
+  
+  <!-- Right Drive Wheel -->
+  <link
+    name="right_motor_link">
+    <inertial>
+      <origin
+        xyz="6.0561E-06 1.5821E-15 -0.0057972"
+        rpy="0 0 0" />
+      <mass
+        value="3.3153" />
+      <inertia
+        ixx="0.004549"
+        ixy="3.0838E-20"
+        ixz="-4.1992E-07"
+        iyy="0.004549"
+        iyz="-1.1339E-17"
+        izz="0.007941" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/right_motor_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.86667 0.9098 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/right_motor_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint connecting right drive wheel to base - continuous rotation for driving -->
+  <joint
+    name="right_motor_joint"
+    type="continuous">
+    <origin
+      xyz="0.185900000000003 -0.187090376336278 -0.055090376336281"
+      rpy="1.5707963267949 0 0" />
+    <parent
+      link="chassis_link" />
+    <child
+      link="right_motor_link" />
+    <axis
+      xyz="0 0 -1" />
+  </joint>
+  
+  <!-- Left Drive Wheel -->
+  <link
+    name="left_motor_link">
+    <inertial>
+      <origin
+        xyz="-6.0561E-06 1.589E-15 0.0057972"
+        rpy="0 0 0" />
+      <mass
+        value="3.3153" />
+      <inertia
+        ixx="0.004549"
+        ixy="-3.2447E-23"
+        ixz="-4.1992E-07"
+        iyy="0.004549"
+        iyz="1.0895E-17"
+        izz="0.007941" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/left_motor_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.86667 0.9098 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/left_motor_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint connecting left drive wheel to base - continuous rotation for driving -->
+  <joint
+    name="left_motor_joint"
+    type="continuous">
+    <origin
+      xyz="0.185900000000003 0.187090376336278 -0.055090376336281"
+      rpy="-1.5707963267949 0 0" />
+    <parent
+      link="chassis_link" />
+    <child
+      link="left_motor_link" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+
+  <!-- ========================================== -->
+  <!-- CASTER WHEELS - Front Support Wheels      -->
+  <!-- ========================================== -->
+  
+  <!-- Left Caster Assembly -->
+  <!-- Caster Body (swivel part) -->
+  <link
+    name="left_caster_body_link">
+    <inertial>
+      <origin
+        xyz="-0.0056507 -1.5266E-16 -0.014851"
+        rpy="0 0 0" />
+      <mass
+        value="0.1598" />
+      <inertia
+        ixx="5.0014E-05"
+        ixy="7.5913E-21"
+        ixz="-9.1512E-06"
+        iyy="3.4326E-05"
+        iyz="3.1022E-20"
+        izz="3.7566E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/left_caster_body_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.77647 0.75686 0.73725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/left_caster_body_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint for caster body swivel - allows caster to rotate and orient -->
+  <joint
+    name="left_caster_body_joint"
+    type="continuous">
+    <origin
+      xyz="-0.200100000000002 0.114095744680851 -0.0581000000000006"
+      rpy="0 0 0" />
+    <parent
+      link="chassis_link" />
+    <child
+      link="left_caster_body_link" />
+    <axis
+      xyz="0 0 -1" />
+  </joint>
+  
+  <!-- Caster Wheel (rolling part) -->
+  <link
+    name="left_caster_wheel_link">
+    <inertial>
+      <origin
+        xyz="-2.498E-16 -5.5511E-17 2.8311E-15"
+        rpy="0 0 0" />
+      <mass
+        value="0.1036" />
+      <inertia
+        ixx="1.4147E-05"
+        ixy="-7.6099E-22"
+        ixz="-1.4230E-21"
+        iyy="1.4147E-05"
+        iyz="1.7108E-21"
+        izz="2.0786E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/left_caster_wheel_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 0.35" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/left_caster_wheel_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint for caster wheel rolling - allows wheel to spin freely -->
+  <joint
+    name="left_caster_wheel_joint"
+    type="continuous">
+    <origin
+      xyz="-0.0149999999999997 0 -0.0369999999999996"
+      rpy="-1.5707963267949 0 0" />
+    <parent
+      link="left_caster_body_link" />
+    <child
+      link="left_caster_wheel_link" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+
+  <!-- Right Caster Assembly -->
+  <!-- Caster Body (swivel part) -->
+  <link
+    name="right_caster_body_link">
+    <inertial>
+      <origin
+        xyz="-0.0056507 4.1633E-17 -0.014851"
+        rpy="0 0 0" />
+      <mass
+        value="0.1598" />
+      <inertia
+        ixx="5.0014E-05"
+        ixy="6.4156E-21"
+        ixz="-9.1512E-06"
+        iyy="3.4326E-05"
+        iyz="8.0519E-21"
+        izz="3.7566E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/right_caster_body_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.77647 0.75686 0.73725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/right_caster_body_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint for caster body swivel - allows caster to rotate and orient -->
+  <joint
+    name="right_caster_body_joint"
+    type="continuous">
+    <origin
+      xyz="-0.200100000000002 -0.114095744680851 -0.0581000000000001"
+      rpy="0 0 0" />
+    <parent
+      link="chassis_link" />
+    <child
+      link="right_caster_body_link" />
+    <axis
+      xyz="0 0 -1" />
+  </joint>
+  
+  <!-- Caster Wheel (rolling part) -->
+  <link
+    name="right_caster_wheel_link">
+    <inertial>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <mass
+        value="0.1036" />
+      <inertia
+        ixx="1.4147E-05"
+        ixy="-2.5754E-22"
+        ixz="-2.1938E-21"
+        iyy="1.4147E-05"
+        iyz="1.1551E-21"
+        izz="2.0786E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/right_caster_wheel_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 0.35" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/right_caster_wheel_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint for caster wheel rolling - allows wheel to spin freely -->
+  <joint
+    name="right_caster_wheel_joint"
+    type="continuous">
+    <origin
+      xyz="-0.015 0 -0.037"
+      rpy="-1.5707963267949 0 0" />
+    <parent
+      link="right_caster_body_link" />
+    <child
+      link="right_caster_wheel_link" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+
+  <!-- ========================================== -->
+  <!-- SENSORS - LiDAR and other sensors         -->
+  <!-- ========================================== -->
+  
+  <!-- LiDAR Sensor -->
+  <link
+    name="lidar_link">
+    <inertial>
+      <origin
+        xyz="-0.0120442420174706 0.000316839526460781 -0.0232865935100451"
+        rpy="0 0 0" />
+      <mass
+        value="0.2679" />
+      <inertia
+        ixx="6.7422E-05"
+        ixy="-1.1724E-06"
+        ixz="1.2151E-06"
+        iyy="8.9176E-05"
+        iyz="4.0167E-08"
+        izz="1.4734E-04" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/lidar_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find temi_v1)/meshes/lidar_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- Fixed joint for LiDAR sensor - rigidly mounted to base -->
+  <joint
+    name="lidar_joint"
+    type="fixed">
+    <origin
+      xyz="0.173861903355688 0.000111231155083316 0.058"
+      rpy="0 0 0" />
+    <parent
+      link="chassis_link" />
+    <child
+      link="lidar_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  
+  <!-- End of TEMI-V1 Robot Description (basicly)-->
+
+  <!-- Conditionally load either simulation plugin or real hardware for lidar -->
+  <!-- <xacro:sllidar_sensor prefix="" use_sim="$(arg use_sim)"/> -->
+  
+  <!--only add Gazebo simulation sensor when in simulation mode-->
+  <xacro:if value="$(arg use_sim)">
+  <!-- Use simulation hardware interface for the wheels -->
+  <ros2_control name="IgnitionSystem" type="system">
+    <hardware>
+      <plugin>ign_ros2_control/IgnitionSystem</plugin>
+    </hardware>
+
+    <joint name="left_motor_joint">
+      <command_interface name="velocity">
+        <param name="min">-0.4</param>
+        <param name="max">0.4</param>
+      </command_interface>
+      <state_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="effort" />
+    </joint>
+
+    <joint name="right_motor_joint">
+      <command_interface name="velocity">
+        <param name="min">-0.4</param>
+        <param name="max">0.4</param>
+      </command_interface>
+      <state_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="effort" />
+    </joint>
+  </ros2_control>
+  </xacro:if>
+
+  <!-- Gazebo ros2_control plugin -->
+  <xacro:if value="$(arg use_sim)">
+  <gazebo>
+    <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+      <parameters>$(find temi_v1)/config/diff_drive_controller.yaml</parameters>
+    </plugin>
+  </gazebo>
+  </xacro:if>
+
+</robot>
