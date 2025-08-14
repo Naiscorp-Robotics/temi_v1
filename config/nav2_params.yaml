@@ -1,0 +1,382 @@
+# ===== AMCL (Adaptive Monte Carlo Localization) =====
+# Thành phần định vị robot trong bản đồ sử dụng thuật toán Monte Carlo
+amcl:
+  ros__parameters:
+    use_sim_time: False
+    # Cải thiện tham số mô hình chuyển động để tăng độ chính xác khi xoay
+    alpha1: 0.01   # GIẢM MẠNH lỗi xoay từ chuyển động xoay (0.03 -> 0.01)
+    alpha2: 0.01   # GIẢM MẠNH lỗi xoay từ chuyển động tịnh tiến (0.03 -> 0.01) 
+    alpha3: 0.008  # GIẢM MẠNH lỗi tịnh tiến từ chuyển động tịnh tiến (0.015 -> 0.008)
+    alpha4: 0.01   # GIẢM MẠNH lỗi tịnh tiến từ chuyển động xoay (0.03 -> 0.01)
+    alpha5: 0.01   # Lỗi trượt ngang (ít quan trọng với robot diff-drive)
+    base_frame_id: "base_link"  # Frame gốc của robot
+    beam_skip_distance: 0.5     # Khoảng cách bỏ qua tia laser
+    beam_skip_error_threshold: 0.9  # Ngưỡng lỗi để bỏ qua tia
+    beam_skip_threshold: 0.3    # Ngưỡng để bỏ qua tia laser
+    do_beamskip: false         # Không bỏ qua tia laser
+    global_frame_id: "map"     # Frame toàn cục (bản đồ)
+    lambda_short: 0.1          # Tham số cho mô hình laser ngắn
+    laser_likelihood_max_dist: 2.0  # Khoảng cách tối đa cho likelihood
+    laser_max_range: 12.0      # Tầm xa tối đa của laser
+    laser_min_range: 0.2       # Tầm gần tối thiểu của laser
+    laser_model_type: "likelihood_field"  # Loại mô hình laser
+    max_beams: 60              # Số tia laser tối đa sử dụng
+    max_particles: 5000        # TĂNG số hạt để cải thiện độ chính xác khi xoay (4000 -> 5000)
+    min_particles: 2000        # TĂNG số hạt tối thiểu (1500 -> 2000)
+    odom_frame_id: "odom"      # Frame odometry
+    pf_err: 0.003             # GIẢM ngưỡng lỗi để resample thường xuyên hơn (0.005 -> 0.003)
+    pf_z: 0.99                # Tham số particle filter
+    recovery_alpha_fast: 0.15  # TĂNG khôi phục khi bị mất (0.12 -> 0.15)
+    recovery_alpha_slow: 0.001 # GIẢM khôi phục chậm để ổn định hơn (0.002 -> 0.001)
+    resample_interval: 1       # Khoảng thời gian resample
+    robot_model_type: "differential"  # Loại robot (bánh xe vi sai)
+    save_pose_rate: 0.5        # Tần suất lưu pose
+    sigma_hit: 0.06           # GIẢM để khớp laser chính xác hơn (0.08 -> 0.06)
+    tf_broadcast: true         # Phát sóng transform
+    transform_tolerance: 0.1   # GIẢM dung sai transform nghiêm ngặt hơn (0.15 -> 0.1)
+    update_min_a: 0.02        # GIẢM để cập nhật thường xuyên hơn khi xoay (0.03 -> 0.02)
+    update_min_d: 0.06        # GIẢM để cập nhật thường xuyên hơn khi tịnh tiến (0.08 -> 0.06)
+    z_hit: 0.9                # TĂNG trọng số cho các hit chính xác (0.85 -> 0.9)
+    z_max: 0.03               # GIẢM trọng số cho phép đo tối đa (0.05 -> 0.03)
+    z_rand: 0.05              # GIẢM trọng số ngẫu nhiên (0.08 -> 0.05)
+    z_short: 0.02             # Trọng số cho phép đo ngắn
+    scan_topic: /scan         # Topic nhận dữ liệu laser
+
+# Client cho AMCL map
+amcl_map_client:
+  ros__parameters:
+    use_sim_time: False
+
+# Node ROS cho AMCL
+amcl_rclcpp_node:
+  ros__parameters:
+    use_sim_time: False
+
+# ===== BT NAVIGATOR (Behavior Tree Navigator) =====
+# Thành phần điều hướng sử dụng cây hành vi (Behavior Tree)
+bt_navigator:
+  ros__parameters:
+    use_sim_time: False
+    global_frame: map          # Frame toàn cục
+    robot_base_frame: base_link # Frame gốc robot
+    odom_topic: /odom          # Topic odometry
+    bt_loop_duration: 10       # Thời gian lặp behavior tree (ms)
+    default_server_timeout: 20 # Timeout mặc định cho server (giây)
+    enable_groot_monitoring: True    # Bật giám sát Groot
+    groot_zmq_publisher_port: 1666   # Port publisher cho Groot
+    groot_zmq_server_port: 1667      # Port server cho Groot
+    # Các file XML behavior tree mặc định được sử dụng:
+    # nav2_bt_navigator/navigate_to_pose_w_replanning_and_recovery.xml
+    # nav2_bt_navigator/navigate_through_poses_w_replanning_and_recovery.xml
+    # Có thể được thiết lập ở đây hoặc thông qua RewrittenYaml remap từ launch file cha
+    
+    # Danh sách các plugin behavior tree
+    plugin_lib_names:
+    - nav2_compute_path_to_pose_action_bt_node      # Tính đường đi đến pose
+    - nav2_compute_path_through_poses_action_bt_node # Tính đường đi qua nhiều pose
+    - nav2_follow_path_action_bt_node               # Theo đường đi
+    - nav2_back_up_action_bt_node                   # Lùi lại
+    - nav2_spin_action_bt_node                      # Xoay tại chỗ
+    - nav2_wait_action_bt_node                      # Đợi
+    - nav2_clear_costmap_service_bt_node            # Xóa costmap
+    - nav2_is_stuck_condition_bt_node               # Kiểm tra bị kẹt
+    - nav2_goal_reached_condition_bt_node           # Kiểm tra đạt mục tiêu
+    - nav2_goal_updated_condition_bt_node           # Kiểm tra mục tiêu được cập nhật
+    - nav2_initial_pose_received_condition_bt_node  # Kiểm tra nhận pose ban đầu
+    - nav2_reinitialize_global_localization_service_bt_node # Khởi tạo lại định vị toàn cục
+    - nav2_rate_controller_bt_node                  # Điều khiển tần suất
+    - nav2_distance_controller_bt_node              # Điều khiển khoảng cách
+    - nav2_speed_controller_bt_node                 # Điều khiển tốc độ
+    - nav2_truncate_path_action_bt_node             # Cắt ngắn đường đi
+    - nav2_goal_updater_node_bt_node                # Cập nhật mục tiêu
+    - nav2_recovery_node_bt_node                    # Node khôi phục
+    - nav2_pipeline_sequence_bt_node                # Chuỗi pipeline
+    - nav2_round_robin_node_bt_node                 # Node round robin
+    - nav2_transform_available_condition_bt_node    # Kiểm tra transform có sẵn
+    - nav2_time_expired_condition_bt_node           # Kiểm tra hết thời gian
+    - nav2_distance_traveled_condition_bt_node      # Kiểm tra khoảng cách đã đi
+    - nav2_single_trigger_bt_node                   # Trigger đơn
+    - nav2_is_battery_low_condition_bt_node         # Kiểm tra pin yếu
+    - nav2_navigate_through_poses_action_bt_node    # Điều hướng qua nhiều pose
+    - nav2_navigate_to_pose_action_bt_node          # Điều hướng đến pose
+    - nav2_remove_passed_goals_action_bt_node       # Xóa mục tiêu đã qua
+    - nav2_planner_selector_bt_node                 # Chọn planner
+    - nav2_controller_selector_bt_node              # Chọn controller
+    - nav2_goal_checker_selector_bt_node            # Chọn goal checker
+
+# Node ROS cho BT Navigator
+bt_navigator_rclcpp_node:
+  ros__parameters:
+    use_sim_time: False
+
+# ===== CONTROLLER SERVER =====
+# Server điều khiển chuyển động cục bộ của robot
+controller_server:
+  ros__parameters:
+    use_sim_time: False  # Sử dụng thời gian mô phỏng (true cho Gazebo, false cho robot thật)
+    controller_frequency: 30.0  # TĂNG tần suất hoạt động để phản ứng nhanh hơn (20.0 -> 30.0)
+    min_x_velocity_threshold: 0.001  # Ngưỡng vận tốc tối thiểu theo X để coi là đang di chuyển
+    min_y_velocity_threshold: 0.0    # Ngưỡng vận tốc tối thiểu theo Y (0 cho diff-drive)
+    min_theta_velocity_threshold: 0.001  # Ngưỡng vận tốc góc tối thiểu để coi là đang xoay
+    failure_tolerance: 0.3  # TĂNG thời gian cho phép để tránh timeout quá nhanh (0.2 -> 0.3)
+    progress_checker_plugin: "progress_checker"  # Plugin kiểm tra tiến trình
+    goal_checker_plugins: ["general_goal_checker"]  # Plugin kiểm tra đạt mục tiêu
+    controller_plugins: ["FollowPath"]  # Plugin điều khiển cục bộ (local planner)
+
+    # Tham số cho plugin kiểm tra tiến trình
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"  # Loại plugin
+      required_movement_radius: 0.05  # GIẢM thêm để phát hiện kẹt nhanh hơn (0.08 -> 0.05)
+      movement_time_allowance: 6.0   # TĂNG thời gian chờ cho angular motion (4.0 -> 6.0)
+      
+    # Tham số cho plugin kiểm tra mục tiêu
+    general_goal_checker:
+      stateful: True  # Goal checker có lưu trạng thái
+      plugin: "nav2_controller::SimpleGoalChecker"  # Loại plugin
+      xy_goal_tolerance: 0.15  # TĂNG sai số để đạt mục tiêu dễ hơn (0.1 -> 0.15)
+      yaw_goal_tolerance: 0.15 # TĂNG sai số góc để xoay dễ hơn (0.1 -> 0.15)
+      
+    # Tham số cho DWB (Dynamic Window Approach) local planner
+    FollowPath:
+      plugin: "dwb_core::DWBLocalPlanner"  # Plugin local planner
+      debug_trajectory_details: True  # Bật debug chi tiết quỹ đạo
+      # Giới hạn vận tốc
+      min_vel_x: -0.12    # Vận tốc tuyến tính tối thiểu theo X (cho phép lùi)
+      min_vel_y: 0.0      # Vận tốc tuyến tính tối thiểu theo Y (0 cho diff-drive)
+      max_vel_x: 0.12     # Vận tốc tuyến tính tối đa theo X
+      max_vel_y: 0.0      # Vận tốc tuyến tính tối đa theo Y (0 cho diff-drive)
+      max_vel_theta: 0.4  # GIẢM vận tốc góc tối đa từ 0.6 -> 0.4 rad/s
+      min_speed_xy: 0.0   # Tốc độ tuyến tính tối thiểu
+      max_speed_xy: 0.12  # Tốc độ tuyến tính tối đa
+      min_speed_theta: 0.0 # Tốc độ góc tối thiểu
+      # Giới hạn gia tốc
+      acc_lim_x: 0.4      # GIẢM gia tốc để mượt hơn (0.5 -> 0.4)
+      acc_lim_y: 0.0      # Giới hạn gia tốc tuyến tính theo Y (0 cho diff-drive)
+      acc_lim_theta: 2.0  # GIẢM gia tốc góc để khớp với giới hạn mới (2.5 -> 2.0)
+      decel_lim_x: -0.4   # GIẢM giảm tốc để mượt hơn (-0.5 -> -0.4)
+      decel_lim_y: 0.0    # Giới hạn giảm tốc tuyến tính theo Y
+      decel_lim_theta: -2.0 # GIẢM giảm tốc góc để khớp với giới hạn mới (-2.5 -> -2.0)
+      # Tham số lấy mẫu vận tốc
+      vx_samples: 20      # TĂNG số mẫu vận tốc theo X (15 -> 20)
+      vy_samples: 1       # Số mẫu vận tốc theo Y (giảm vì không di chuyển ngang)
+      vtheta_samples: 25  # TĂNG số mẫu vận tốc góc để xoay mượt hơn (20 -> 25)
+      # Tham số mô phỏng và đánh giá
+      sim_time: 2.0       # TĂNG thời gian mô phỏng quỹ đạo (1.7 -> 2.0)
+      linear_granularity: 0.04   # GIẢM độ phân giải để chính xác hơn (0.05 -> 0.04)
+      angular_granularity: 0.02  # GIẢM độ phân giải góc để chính xác hơn (0.025 -> 0.02)
+      transform_tolerance: 0.15  # GIẢM thời gian chờ transform (0.2 -> 0.15)
+      xy_goal_tolerance: 0.15    # TĂNG sai số cho DWB (0.12 -> 0.15)
+      trans_stopped_velocity: 0.05 # GIẢM ngưỡng vận tốc dừng (0.08 -> 0.05)
+      short_circuit_trajectory_evaluation: True # Dừng đánh giá khi tìm thấy quỹ đạo hợp lệ đầu tiên
+      stateful: True      # DWB lưu trạng thái giữa các lần gọi
+      
+      # Danh sách các "critics" (tiêu chí đánh giá) để chọn quỹ đạo tốt nhất
+      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
+      BaseObstacle.scale: 0.01    # GIẢM MẠNH trọng số tránh vật cản (0.02 -> 0.01)
+      PathAlign.scale: 60.0       # TĂNG trọng số đi theo đường đi (50.0 -> 60.0)
+      PathAlign.forward_point_distance: 0.25 # TĂNG khoảng cách nhìn về phía trước (0.2 -> 0.25)
+      GoalAlign.scale: 40.0       # TĂNG trọng số hướng về mục tiêu (35.0 -> 40.0)
+      GoalAlign.forward_point_distance: 0.25 # TĂNG khoảng cách nhìn về phía trước (0.2 -> 0.25)
+      PathDist.scale: 60.0        # TĂNG trọng số đi gần đường đi (50.0 -> 60.0)
+      GoalDist.scale: 40.0        # TĂNG trọng số tiếp cận mục tiêu (35.0 -> 40.0)
+      RotateToGoal.scale: 50.0    # TĂNG trọng số xoay chính xác (45.0 -> 50.0)
+      RotateToGoal.slowing_factor: 2.5    # GIẢM hệ số làm chậm để xoay nhanh hơn (3.0 -> 2.5)
+      RotateToGoal.lookahead_time: 2.5    # TĂNG thời gian nhìn về phía trước (2.0 -> 2.5)
+      Oscillation.scale: 0.3      # GIẢM trọng số chống dao động (0.5 -> 0.3)
+      Oscillation.oscillation_reset_dist: 0.02   # GIẢM khoảng cách reset dao động (0.03 -> 0.02)
+      Oscillation.oscillation_reset_angle: 0.1   # GIẢM góc reset dao động (0.15 -> 0.1)
+      
+# Node ROS cho Controller Server
+controller_server_rclcpp_node:
+  ros__parameters:
+    use_sim_time: False
+
+# ===== LOCAL COSTMAP =====
+# Bản đồ chi phí cục bộ (vùng xung quanh robot)
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      update_frequency: 10.0   # TĂNG tần suất cập nhật cho real-time (5.0 -> 10.0)
+      publish_frequency: 5.0   # TĂNG tần suất publish (2.0 -> 5.0)
+      global_frame: odom       # Frame toàn cục cho local costmap
+      robot_base_frame: base_link # Frame gốc robot
+      use_sim_time: False
+      rolling_window: true     # Sử dụng cửa sổ trượt theo robot
+      width: 4                 # TĂNG chiều rộng costmap để nhìn xa hơn (3 -> 4)
+      height: 4                # TĂNG chiều cao costmap để nhìn xa hơn (3 -> 4)
+      resolution: 0.05         # Độ phân giải costmap (m/pixel)
+      # Footprint robot (hình dạng robot nhìn từ trên) - GIẢM để robot có thể xoay dễ hơn
+      footprint: "[ [0.12, 0.09], [0.12, -0.09], [-0.12, -0.09], [-0.12, 0.09] ]"
+      plugins: ["voxel_layer", "inflation_layer"] # Các plugin layer
+      
+      # Layer phồng (tăng kích thước vật cản)
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 8.0  # TĂNG hệ số để tạo gradient chi phí rõ ràng hơn (5.0 -> 8.0)
+        inflation_radius: 0.12    # GIẢM MẠNH bán kính phồng để robot xoay dễ hơn (0.15 -> 0.12)
+        
+      # Layer voxel (3D obstacle detection)
+      voxel_layer:
+        plugin: "nav2_costmap_2d::VoxelLayer"
+        enabled: True
+        publish_voxel_map: True   # Publish voxel map
+        origin_z: 0.0             # Độ cao gốc
+        z_resolution: 0.05        # Độ phân giải theo Z
+        z_voxels: 16              # Số voxel theo Z
+        max_obstacle_height: 2.0  # Chiều cao vật cản tối đa
+        mark_threshold: 0         # Ngưỡng đánh dấu vật cản
+        observation_sources: scan # Nguồn quan sát
+        scan:
+          topic: /scan            # Topic laser scan
+          max_obstacle_height: 2.0 # Chiều cao vật cản tối đa từ laser
+          clearing: True          # Cho phép xóa vật cản
+          marking: True           # Cho phép đánh dấu vật cản
+          data_type: "LaserScan"  # Loại dữ liệu
+          raytrace_max_range: 12.0 # Tầm xa tối đa cho raytrace
+          raytrace_min_range: 0.2  # Tầm gần tối thiểu cho raytrace
+          obstacle_max_range: 12.0 # Tầm xa tối đa phát hiện vật cản
+          obstacle_min_range: 0.2  # Tầm gần tối thiểu phát hiện vật cản
+          
+      # Layer tĩnh (từ bản đồ)
+      static_layer:
+        map_subscribe_transient_local: True # Subscribe map với QoS transient local
+      always_send_full_costmap: True # Luôn gửi toàn bộ costmap
+      
+  # Client cho local costmap
+  local_costmap_client:
+    ros__parameters:
+      use_sim_time: False
+      
+  # Node ROS cho local costmap
+  local_costmap_rclcpp_node:
+    ros__parameters:
+      use_sim_time: False
+
+# ===== GLOBAL COSTMAP =====
+# Bản đồ chi phí toàn cục (toàn bộ bản đồ)
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      update_frequency: 2.0     # TĂNG tần suất cập nhật (1.0 -> 2.0)
+      publish_frequency: 2.0    # TĂNG tần suất publish (1.0 -> 2.0)
+      global_frame: map         # Frame toàn cục
+      robot_base_frame: base_link # Frame gốc robot
+      use_sim_time: False
+      robot_radius: 0.11        # GIẢM THÊM bán kính robot để xoay dễ hơn (0.13 -> 0.11)
+      resolution: 0.05          # Độ phân giải (m/pixel)
+      track_unknown_space: true # Theo dõi vùng chưa biết
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"] # Các plugin layer
+      
+      # Layer vật cản động
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: True
+        observation_sources: scan # Nguồn quan sát
+        scan:
+          topic: /scan            # Topic laser scan
+          max_obstacle_height: 2.0 # Chiều cao vật cản tối đa
+          clearing: True          # Cho phép xóa vật cản
+          marking: True           # Cho phép đánh dấu vật cản
+          data_type: "LaserScan"  # Loại dữ liệu
+          raytrace_max_range: 12.0 # Tầm xa tối đa cho raytrace
+          raytrace_min_range: 0.2  # Tầm gần tối thiểu cho raytrace
+          obstacle_max_range: 12.0 # Tầm xa tối đa phát hiện vật cản
+          obstacle_min_range: 0.2  # Tầm gần tối thiểu phát hiện vật cản
+          
+      # Layer tĩnh (từ bản đồ đã lưu)
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_subscribe_transient_local: True # Subscribe với QoS transient local
+        
+      # Layer phồng vật cản
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 8.0  # TĂNG hệ số như local costmap (5.0 -> 8.0)
+        inflation_radius: 0.20    # GIẢM bán kính phồng để robot đi gần tường hơn (0.25 -> 0.20)
+      always_send_full_costmap: True # Luôn gửi toàn bộ costmap
+      
+  # Client cho global costmap
+  global_costmap_client:
+    ros__parameters:
+      use_sim_time: False
+      
+  # Node ROS cho global costmap
+  global_costmap_rclcpp_node:
+    ros__parameters:
+      use_sim_time: False
+
+# ===== MAP SERVER =====
+# Server cung cấp bản đồ tĩnh
+map_server:
+  ros__parameters:
+    use_sim_time: False
+    yaml_filename: "turtlebot3_world.yaml" # File bản đồ YAML
+
+# ===== MAP SAVER =====
+# Thành phần lưu bản đồ
+map_saver:
+  ros__parameters:
+    use_sim_time: False
+    save_map_timeout: 5.0       # Timeout khi lưu bản đồ (giây)
+    free_thresh_default: 0.25   # Ngưỡng vùng trống mặc định
+    occupied_thresh_default: 0.65 # Ngưỡng vùng có vật cản mặc định
+    map_subscribe_transient_local: True # Subscribe với QoS transient local
+
+# ===== PLANNER SERVER =====
+# Server lập kế hoạch đường đi toàn cục
+planner_server:
+  ros__parameters:
+    expected_planner_frequency: 25.0 # TĂNG tần suất planner (20.0 -> 25.0)
+    use_sim_time: False
+    planner_plugins: ["GridBased"]   # Danh sách plugin planner
+    GridBased:
+      plugin: "nav2_navfn_planner/NavfnPlanner" # Plugin NavFn
+      tolerance: 0.15       # GIẢM sai số để lập kế hoạch chính xác hơn (0.2 -> 0.15)
+      use_astar: true       # CHUYỂN sang A* để tìm đường tối ưu hơn
+      allow_unknown: true   # Cho phép lập kế hoạch qua vùng chưa biết
+
+# Node ROS cho Planner Server
+planner_server_rclcpp_node:
+  ros__parameters:
+    use_sim_time: True
+
+# ===== RECOVERIES SERVER =====
+# Server các hành vi khôi phục khi robot gặp khó khăn
+recoveries_sers_server:
+  ros__parameters:
+    costmap_topic: local_costmap/costmap_raw        # Topic costmap
+    footprint_topic: local_costmap/published_footprint # Topic footprint
+    cycle_frequency: 15.0       # TĂNG tần suất chu kỳ recovery (10.0 -> 15.0)
+    recovery_plugins: ["spin", "backup", "wait"]   # Danh sách plugin recovery
+    spin:
+      plugin: "nav2_recoveries/Spin"    # Plugin xoay tại chỗ
+    backup:
+      plugin: "nav2_recoveries/BackUp"  # Plugin lùi lại
+    wait:
+      plugin: "nav2_recoveries/Wait"    # Plugin đợi
+    global_frame: odom          # Frame toàn cục cho recovery
+    robot_base_frame: base_link # Frame gốc robot
+    transform_timeout: 0.15     # TĂNG timeout cho transform (0.1 -> 0.15)
+    use_sim_time: False
+    simulate_ahead_time: 2.5    # TĂNG thời gian mô phỏng về phía trước (2.0 -> 2.5)
+    max_rotational_vel: 0.4     # GIẢM vận tốc xoay tối đa để khớp với diff_drive (0.6 -> 0.4)
+    min_rotational_vel: 0.15    # GIẢM vận tốc xoay tối thiểu (0.2 -> 0.15)
+    rotational_acc_lim: 2.0     # GIẢM giới hạn gia tốc xoay để khớp với config mới (2.5 -> 2.0)
+
+# ===== ROBOT STATE PUBLISHER =====
+# Publisher trạng thái robot (transforms, joint states)
+robot_state_publisher:
+  ros__parameters:
+    use_sim_time: False
+
+# ===== WAYPOINT FOLLOWER =====
+# Thành phần theo dõi và di chuyển qua các waypoint
+waypoint_follower:
+  ros__parameters:
+    loop_rate: 20               # Tần suất vòng lặp (Hz)
+    stop_on_failure: false      # KHÔNG dừng khi gặp lỗi, tiếp tục waypoint tiếp theo
+    waypoint_task_executor_plugin: "wait_at_waypoint" # Plugin thực thi task tại waypoint
+    wait_at_waypoint:
+      plugin: "nav2_waypoint_follower::WaitAtWaypoint" # Plugin đợi tại waypoint
+      enabled: True             # Bật plugin
+      waypoint_pause_duration: 200 # Thời gian dừng tại mỗi waypoint (ms) 
